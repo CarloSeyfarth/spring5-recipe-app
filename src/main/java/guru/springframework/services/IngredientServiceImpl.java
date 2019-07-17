@@ -95,16 +95,31 @@ public class IngredientServiceImpl implements IngredientService {
         }
         else {
             //new ingredient
-            recipe.addIngredient(ingredientCommandToIngredient.convert(ingredientCommand));
+            Ingredient ingredient = ingredientCommandToIngredient.convert(ingredientCommand);
+            ingredient.setRecipe(recipe);
+            recipe.addIngredient(ingredient);
         }
 
         Recipe savedRecipe = recipeRepository.save(recipe);
 
+        Optional<Ingredient> savedIngredientOptional =
+                savedRecipe.getIngredients()
+                           .stream()
+                           .filter(ingredient -> ingredient.getId().equals(ingredientCommand.getId()))
+                           .findFirst();
+
+        //check by description
+        if (!savedIngredientOptional.isPresent()) {
+            //not totally safe, but best guess
+            savedIngredientOptional = savedRecipe.getIngredients()
+                    .stream()
+                    .filter(ingredient -> ingredient.getDescription().equals(ingredientCommand.getDescription()))
+                    .filter(ingredient -> ingredient.getAmount().equals(ingredientCommand.getAmount()))
+                    .filter(ingredient -> ingredient.getUom().getId().equals(ingredientCommand.getUom().getId()))
+                    .findFirst();
+        }
+
         //todo check for fail
-        return ingredientToIngredientCommand.convert(savedRecipe.getIngredients()
-                .stream()
-                .filter(ingredient -> ingredient.getId().equals(ingredientCommand.getId()))
-                .findFirst()
-                .get());
+        return ingredientToIngredientCommand.convert(savedIngredientOptional.get());
     }
 }
