@@ -92,6 +92,21 @@ public class RecipeControllerTest {
     }
 
     @Test
+    public void postNewRecipeFormTestValidationFail() throws Exception {
+        RecipeCommand recipeCommand = new RecipeCommand();
+        recipeCommand.setId(2L);
+
+        when(recipeService.saveRecipeCommand(any())).thenReturn(recipeCommand);
+
+        mockMvc.perform(post("/recipe")
+                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                 .param("id", "")
+                 .param("cookTime", "3000"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("recipe/recipeform"));
+    }
+
+    @Test
     public void getUpdateRecipeFormTest() throws Exception {
         RecipeCommand recipeCommand = new RecipeCommand();
         recipeCommand.setId(2L);
